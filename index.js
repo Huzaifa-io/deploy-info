@@ -53,20 +53,19 @@ class DeployInfo {
   getDeployCountFromGit() {
     try {
       const output = execSync(
-        `git log --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
+        `git rev-list --count HEAD`,
         { encoding: "utf8" }
-      );
-      const lines = output.split(/\r?\n/).filter(Boolean);
-      return lines.length;
+      ).trim();
+      return parseInt(output) || 0;
     } catch (_) {
       return 0;
     }
   }
 
-  getLastSuccessfulFromGit() {
+  getLastFromGit() {
     try {
       const commit = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
+        `git log -1 --pretty=format:%H`,
         { encoding: "utf8" }
       ).trim();
       if (!commit) return { commit: null, time: null };
@@ -78,15 +77,13 @@ class DeployInfo {
     }
   }
 
-  getLastSuccessfulCommitMessage() {
+  getLastCommitMessage() {
     try {
-      const commit = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
+      const message = execSync(
+        `git log -1 --format=%s`,
         { encoding: "utf8" }
       ).trim();
-      if (!commit) return "No successful deploy found";
-      const message = execSync(`git log -1 --format=%s ${commit}`, { encoding: "utf8" }).trim();
-      return message;
+      return message || "No commit message";
     } catch (_) {
       return "Unable to retrieve message";
     }
@@ -95,13 +92,12 @@ class DeployInfo {
   // Determine deploy success from git logs only
   getDeployStatus() {
     try {
-      // Check if HEAD commit matches success pattern
-      const matches = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
+      // Check if we have commits
+      const commit = execSync(
+        `git log -1 --pretty=format:%H`,
         { encoding: "utf8" }
       ).trim();
-      if (matches) return "success";
-      return "failed"; // HEAD does not indicate a successful deploy
+      return commit ? "success" : "unknown";
     } catch (_) {
       return "unknown";
     }
@@ -159,27 +155,17 @@ class DeployInfo {
     }
   }
 
-  getLastSuccessfulAuthorName() {
+  getLastAuthorName() {
     try {
-      const commit = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
-        { encoding: "utf8" }
-      ).trim();
-      if (!commit) return "unknown";
-      return execSync(`git log -1 --format=%an ${commit}`, { encoding: "utf8" }).trim();
+      return execSync(`git log -1 --format=%an`, { encoding: "utf8" }).trim();
     } catch (_) {
       return "unknown";
     }
   }
 
-  getLastSuccessfulAuthorEmail() {
+  getLastAuthorEmail() {
     try {
-      const commit = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
-        { encoding: "utf8" }
-      ).trim();
-      if (!commit) return "unknown";
-      return execSync(`git log -1 --format=%ae ${commit}`, { encoding: "utf8" }).trim();
+      return execSync(`git log -1 --format=%ae`, { encoding: "utf8" }).trim();
     } catch (_) {
       return "unknown";
     }
@@ -190,23 +176,6 @@ class DeployInfo {
       return execSync("git describe --tags --abbrev=0", { encoding: "utf8" }).trim();
     } catch (_) {
       return "no-tag";
-    }
-  }
-
-  getDeployCommitStats() {
-    try {
-      const commit = execSync(
-        `git log -1 --grep="deploy success|deployment successful" --regexp-ignore-case --pretty=format:%H`,
-        { encoding: "utf8" }
-      ).trim();
-      if (!commit) return { filesChanged: 0, insertions: 0, deletions: 0 };
-      const stats = execSync(`git show --stat ${commit}`, { encoding: "utf8" });
-      const lines = stats.split(/\r?\n/);
-      const lastLine = lines[lines.length - 2] || "";
-      const match = lastLine.match(/(\d+)\s+files?\s+changed|insertions|deletions/);
-      return { raw: lastLine, commit };
-    } catch (_) {
-      return { filesChanged: 0, insertions: 0, deletions: 0 };
     }
   }
 
@@ -243,16 +212,16 @@ class DeployInfo {
     return this.getDeployCountFromGit();
   }
 
-  get last_success_commit() {
-    return this.getLastSuccessfulFromGit().commit || "unknown";
+  get last_commit() {
+    return this.getLastFromGit().commit || "unknown";
   }
 
-  get last_success_time() {
-    return this.getLastSuccessfulFromGit().time || null;
+  get last_time() {
+    return this.getLastFromGit().time || null;
   }
 
-  get last_success_message() {
-    return this.getLastSuccessfulCommitMessage();
+  get last_message() {
+    return this.getLastCommitMessage();
   }
 
   get author_name() {
@@ -267,12 +236,12 @@ class DeployInfo {
     return this.getGitCommitterName();
   }
 
-  get last_success_author() {
-    return this.getLastSuccessfulAuthorName();
+  get last_author() {
+    return this.getLastAuthorName();
   }
 
-  get last_success_author_email() {
-    return this.getLastSuccessfulAuthorEmail();
+  get last_author_email() {
+    return this.getLastAuthorEmail();
   }
 
   get latest_tag() {
@@ -281,7 +250,6 @@ class DeployInfo {
 
   // Get all info as object
   getInfo() {
-    const lastSuccess = this.getLastSuccessfulFromGit();
     return {
       version: this.version,
       deployTime: this.deployTime,
@@ -289,7 +257,7 @@ class DeployInfo {
       deployStatus: this.deployStatus,
       deployCount: this.getDeployCountFromGit(),
       git: {
-        currentCommit: {
+        commit: {
           hash: this.gitCommit,
           branch: this.gitBranch,
           date: this.getGitLastCommitDate(),
@@ -300,15 +268,6 @@ class DeployInfo {
           },
           committer: this.getGitCommitterName(),
         },
-        lastSuccessfulDeploy: {
-          commit: lastSuccess.commit,
-          time: lastSuccess.time,
-          message: this.getLastSuccessfulCommitMessage(),
-          author: {
-            name: this.getLastSuccessfulAuthorName(),
-            email: this.getLastSuccessfulAuthorEmail(),
-          },
-        },
         latestTag: this.getGitTag(),
       },
     };
@@ -317,25 +276,19 @@ class DeployInfo {
   // Get formatted string
   toString() {
     const info = this.getInfo();
-    const current = info.git.currentCommit;
-    const lastDeploy = info.git.lastSuccessfulDeploy;
+    const commit = info.git.commit;
     return `
-╔════════════════════ DEPLOY INFO ════════════════════╗
+╔════════════════════ DEPLOY INFO ══════════════════════╗
 ║ Version      : ${info.version}
 ║ Status       : ${info.deployStatus.toUpperCase()}
 ║ Deploy Count : ${info.deployCount}
 ║ Build Time   : ${info.buildTime}
-╠════════════════════ CURRENT COMMIT ═════════════════╣
-║ Hash       : ${current.hash}
-║ Branch     : ${current.branch}
-║ Author     : ${current.author.name} <${current.author.email}>
-║ Date       : ${current.date}
-║ Message    : ${current.message}
-╠═══════════════════ LAST SUCCESSFUL DEPLOY ══════════╣
-║ Commit     : ${lastDeploy.commit || "-"}
-║ Author     : ${lastDeploy.author.name || "-"} <${lastDeploy.author.email || "-"}>
-║ Time       : ${lastDeploy.time || "-"}
-║ Message    : ${lastDeploy.message || "-"}
+╠═════════════════════ LAST COMMIT ═════════════════════╣
+║ Hash       : ${commit.hash}
+║ Branch     : ${commit.branch}
+║ Author     : ${commit.author.name} <${commit.author.email}>
+║ Date       : ${commit.date}
+║ Message    : ${commit.message}
 ╠═══════════════════════════════════════════════════════╣
 ║ Latest Tag : ${info.git.latestTag}
 ╚═══════════════════════════════════════════════════════╝
