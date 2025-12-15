@@ -1,0 +1,6 @@
+example.js
+*.log
+.DS_Store
+coverage/
+test/
+.git/
