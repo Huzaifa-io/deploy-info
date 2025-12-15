@@ -1,7 +1,7 @@
 {
   "name": "deploy-info",
-  "version": "1.0.0",
-  "description": "Get deployment time and version information for your Node.js application",
+  "version": "1.0.2",
+  "description": "Professional deployment tracking module that extracts commit details, deployment history, author information, and build metadata directly from Git logs with zero dependencies",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,14 +9,29 @@
   "keywords": [
     "deploy",
     "deployment",
+    "deployment-info",
+    "deployment-tracking",
     "version",
     "build-time",
+    "build-info",
     "git",
-    "nodejs"
+    "git-info",
+    "git-commit",
+    "git-log",
+    "nodejs",
+    "ci-cd",
+    "devops",
+    "release",
+    "author",
+    "commit-history",
+    "deploy-history",
+    "production",
+    "monitoring"
   ],
-  "author": "",
+  "author": "Muhammad Huzaifa <huzaifa.pro.dev@gmail.com>",
   "license": "MIT",
-  "dependencies": {
-    "child_process": "^1.0.2"
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/huzaifa-io/deploy-info"
   }
 }

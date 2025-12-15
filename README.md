@@ -150,24 +150,24 @@ console.log(deployInfo.toString());
 **Example Output:**
 ```
 ┌──────────────────────── DEPLOY INFO ───────────────────────────┐
-│ Version      : 1.0.0
-│ Status       : SUCCESS
-│ Deploy Count : 5
-│ Build Time   : 12/15/2025, 10:30:45 AM
+│ Version      : 1.0.0                                           │
+│ Status       : SUCCESS                                         │
+│ Deploy Count : 5                                               │ 
+│ Build Time   : 12/15/2025, 10:30:45 AM                         │
 ├──────────────────────── CURRENT COMMIT ────────────────────────┤
-│ Hash       : a1b2c3d
-│ Branch     : main
-│ Author     : John Doe <john@example.com>
-│ Date       : 2025-12-15T10:30:00.000Z
-│ Message    : deploy success: release v1.0.0
+│ Hash       : a1b2c3d                                           │
+│ Branch     : main                                              │
+│ Author     : John Doe <john@example.com>                       │
+│ Date       : 2025-12-15T10:30:00.000Z                          │
+│ Message    : deploy success: release v1.0.0                    │
 ├──────────────── LAST SUCCESSFUL DEPLOY ────────────────────────┤
-│ Commit     : 9x8y7z6
-│ Author     : Jane Smith <jane@example.com>
-│ Time       : 2025-12-14T14:20:30.000Z
-│ Message    : deploy success: release v0.9.9
-├──────────────────────────────────────────────────────────────────┤
-│ Latest Tag : v1.0.0
-└──────────────────────────────────────────────────────────────────┘
+│ Commit     : 9x8y7z6                                           │
+│ Author     : Jane Smith <jane@example.com>                     │
+│ Time       : 2025-12-14T14:20:30.000Z                          │
+│ Message    : deploy success: release v0.9.9                    │
+├────────────────────────────────────────────────────────────────┤
+│ Latest Tag : v1.0.0                                            │
+└────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -399,4 +399,4 @@ MIT - Free to use in any project
 
 ---
 
-**Deployed with ❤️ by developers for developers**
+**Created with ❤️ by Muhammad Huzaifa**
