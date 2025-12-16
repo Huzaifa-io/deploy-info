@@ -7,12 +7,13 @@ A professional Node.js module that captures and tracks deployment information di
 ## Features ✨
 
 - **Git-Based Tracking**: All deployment data sourced directly from Git logs (no external files needed)
+- **Server Start Time Tracking**: Captures deployment time when server starts
 - **Complete Commit History**: Track total commit count and access latest commit details
 - **Author Information**: Capture author name, email, and committer details for auditing
-- **Simple Status Detection**: Automatically checks if git repository exists and has commits
 - **Version Management**: Read version from `package.json` automatically
 - **Professional Output**: Beautiful formatted console output with box drawing
 - **Structured Data**: Access deployment info via object notation for API integration
+- **CamelCase Convention**: Consistent naming across all properties for better readability
 - **No Dependencies**: Uses only Node.js built-in modules
 
 ---
@@ -39,57 +40,48 @@ console.log(deployInfo.toString());
 const info = deployInfo.getInfo();
 console.log(info);
 
-// Access specific properties
-console.log(deployInfo.status);              // "success" or "unknown"
-console.log(deployInfo.deploy_count);        // Total commits in repository
-console.log(deployInfo.app_version);         // From package.json
-console.log(deployInfo.author_name);         // Current commit author
-console.log(deployInfo.last_author);         // Last commit author
+// Access specific properties (camelCase)
+console.log(deployInfo.deployTime);          // Server start time (ISO format)
+console.log(deployInfo.commitCount);         // Total commits in repository
+console.log(deployInfo.version);             // From package.json
+console.log(deployInfo.authorName);          // Current commit author
+console.log(deployInfo.lastCommitHash);      // Last commit hash
 ```
 
 ---
 
 ## API Reference
 
-### Deployment Status & History
+### Deployment Information
 
 ```javascript
-deployInfo.status                    // "success" | "unknown"
-deployInfo.deploy_count              // Total commits in repository (number)
-deployInfo.last_commit               // Last commit hash
-deployInfo.last_time                 // Last commit time (ISO)
-deployInfo.last_message              // Last commit message
+deployInfo.deployTime                // Server start time (ISO format)
+deployInfo.version                   // Version from package.json
+deployInfo.commitCount               // Total commits in repository (number)
 ```
 
 ### Current Commit Information
 
 ```javascript
-deployInfo.commit                    // Short commit hash
-deployInfo.branch                    // Current branch name
-deployInfo.author_name               // Commit author name
-deployInfo.author_email              // Commit author email
-deployInfo.committer_name            // Commit committer name
-deployInfo.latest_time               // Commit date (ISO timestamp)
-```
-
-### Application & Build Information
-
-```javascript
-deployInfo.app_version               // Version from package.json
-deployInfo.deployTime                // When module loaded (ISO)
-deployInfo.latest_deploy_time        // When module loaded (ISO)
-deployInfo.build_time                // When module loaded (locale string)
-deployInfo.latest_tag                // Latest git tag
+deployInfo.commitHash                // Short commit hash
+deployInfo.branchName                // Current branch name
+deployInfo.authorName                // Commit author name
+deployInfo.authorEmail               // Commit author email
+deployInfo.committerName             // Commit committer name
 ```
 
 ### Last Commit Details
 
 ```javascript
-deployInfo.last_author               // Last commit author name
-deployInfo.last_author_email         // Last commit author email
-deployInfo.last_commit               // Last commit hash
-deployInfo.last_time                 // Last commit timestamp
-deployInfo.last_message              // Last commit message
+deployInfo.lastCommitHash            // Last commit hash (full)
+deployInfo.lastCommitDate            // Last commit timestamp (ISO)
+deployInfo.lastCommitMessage         // Last commit message
+```
+
+### Git Tags
+
+```javascript
+deployInfo.latestTag                 // Latest git tag
 ```
 
 ---
@@ -110,8 +102,6 @@ console.log(JSON.stringify(info, null, 2));
 {
   version: "1.0.0",
   deployTime: "2025-12-15T10:30:45.123Z",
-  buildTime: "12/15/2025, 10:30:45 AM",
-  deployStatus: "success",
   deployCount: 42,
   git: {
     commit: {
@@ -142,9 +132,7 @@ console.log(deployInfo.toString());
 ```
 ╔════════════════════ DEPLOY INFO ══════════════════════╗
 ║ Version      : 1.0.0
-║ Status       : SUCCESS
 ║ Deploy Count : 42
-║ Build Time   : 12/15/2025, 10:30:45 AM
 ╠═════════════════════ LAST COMMIT ═════════════════════╣
 ║ Hash       : a1b2c3d
 ║ Branch     : main
@@ -160,14 +148,14 @@ console.log(deployInfo.toString());
 
 ## How It Works
 
-### Simple Git Tracking
+### Git-Based Tracking
 
-The module tracks all commits in your repository:
+The module tracks all commits in your repository and captures server start time:
 
-- **Deploy Count**: Total number of commits in the repository (`git rev-list --count HEAD`)
-- **Status**: Returns "success" if git repository has commits, "unknown" otherwise
+- **Deploy Time**: Captured when the module is first loaded (server start time)
+- **Commit Count**: Total number of commits in the repository (`git rev-list --count HEAD`)
 - **Last Commit**: Always refers to the most recent commit (HEAD)
-- **No Pattern Matching**: Works with any commit message
+- **No Special Format Required**: Works with any commit message
 
 **All commits are tracked - no special commit message format required.**
 
@@ -193,21 +181,19 @@ app.get('/api/info', (req, res) => {
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  const status = deployInfo.status === 'success' ? 200 : 503;
-  res.status(status).json({
-    status: deployInfo.status,
-    version: deployInfo.app_version,
-    deployCount: deployInfo.deploy_count,
-    author: deployInfo.last_author
+  res.status(200).json({
+    version: deployInfo.version,
+    deployCount: deployInfo.commitCount,
+    deployTime: deployInfo.deployTime
   });
 });
 
 // Version endpoint
 app.get('/version', (req, res) => {
   res.json({
-    version: deployInfo.app_version,
-    commit: deployInfo.commit,
-    branch: deployInfo.branch
+    version: deployInfo.version,
+    commit: deployInfo.commitHash,
+    branch: deployInfo.branchName
   });
 });
 
@@ -225,14 +211,14 @@ const deployInfo = require('deploy-info');
 console.log('═══════════════════════════════════════');
 console.log('DEPLOYMENT REPORT');
 console.log('═══════════════════════════════════════');
-console.log(`App Version:      ${deployInfo.app_version}`);
-console.log(`Status:           ${deployInfo.status}`);
-console.log(`Total Commits:    ${deployInfo.deploy_count}`);
-console.log(`Current Branch:   ${deployInfo.branch}`);
-console.log(`Current Author:   ${deployInfo.author_name}`);
-console.log(`Last Commit By:   ${deployInfo.last_author}`);
-console.log(`Last Commit Time: ${deployInfo.last_time}`);
-console.log(`Latest Tag:       ${deployInfo.latest_tag}`);
+console.log(`App Version:      ${deployInfo.version}`);
+console.log(`Deploy Time:      ${deployInfo.deployTime}`);
+console.log(`Total Commits:    ${deployInfo.commitCount}`);
+console.log(`Current Branch:   ${deployInfo.branchName}`);
+console.log(`Current Author:   ${deployInfo.authorName}`);
+console.log(`Last Commit:      ${deployInfo.lastCommitHash}`);
+console.log(`Last Commit Time: ${deployInfo.lastCommitDate}`);
+console.log(`Latest Tag:       ${deployInfo.latestTag}`);
 console.log('═══════════════════════════════════════');
 ```
 
@@ -243,18 +229,18 @@ const deployInfo = require('deploy-info');
 
 const deploymentLog = {
   timestamp: new Date().toISOString(),
-  version: deployInfo.app_version,
-  status: deployInfo.status,
-  currentBranch: deployInfo.branch,
+  version: deployInfo.version,
+  deployTime: deployInfo.deployTime,
+  currentBranch: deployInfo.branchName,
   currentAuthor: {
-    name: deployInfo.author_name,
-    email: deployInfo.author_email
+    name: deployInfo.authorName,
+    email: deployInfo.authorEmail
   },
-  deploymentCount: deployInfo.deploy_count,
-  lastSuccessful: {
-    commit: deployInfo.last_commit,
-    author: deployInfo.last_author,
-    time: deployInfo.last_time
+  commitCount: deployInfo.commitCount,
+  lastCommit: {
+    hash: deployInfo.lastCommitHash,
+    date: deployInfo.lastCommitDate,
+    message: deployInfo.lastCommitMessage
   }
 };
 
@@ -291,7 +277,7 @@ npm run deploy-info
 
 ## Troubleshooting
 
-### Status shows "unknown"
+### Git information shows "unknown"
 
 **Problem**: Module cannot access Git information
 
@@ -301,9 +287,9 @@ git status
 git log --oneline
 ```
 
-### No deployments counted
+### Commit count shows 0
 
-**Problem**: Deploy count shows 0
+**Problem**: No commits found in repository
 
 **Solution**: Verify you have commits in your repository
 ```bash
@@ -338,10 +324,10 @@ git config --global user.email "your.email@example.com"
 
 ## Performance
 
-- **Module Load**: 50-200ms (includes Git queries)
-- **Getters Access**: <1ms (in-memory)
-- **getDeployCountFromGit()**: 100-300ms (scans commits)
-- **toString()**: <5ms (formatting)
+- **Module Load**: 50-100ms (captures deploy time and initializes)
+- **Getters Access**: <1ms (lazy-loaded Git queries)
+- **getInfo()**: 100-300ms (multiple Git queries)
+- **toString()**: 100-300ms (includes getInfo() call)
 
 *Times vary based on repository size and system performance*
 
@@ -354,16 +340,17 @@ git config --global user.email "your.email@example.com"
 - Cache the instance: `const deployInfo = require('deploy-info')`
 - Use `getInfo()` for API responses
 - Use `toString()` for console output
-- Use getters for single values
+- Use getters for single values (lazy-loaded)
+- Track server start time via `deployTime`
 - Integrate with CI/CD pipelines
 - Include deployment info in error reports
 
 ### ❌ DON'T
 
 - Don't create multiple instances
-- Don't modify commit messages after deployment
-- Don't rely on deploy count without valid messages
-- Don't expect real-time updates without Git commits
+- Don't expect `deployTime` to change (it's set at server start)
+- Don't call `getInfo()` repeatedly (cache if needed)
+- Don't rely on Git info without proper Git setup
 
 ---
 
@@ -373,4 +360,4 @@ MIT - Free to use in any project
 
 ---
 
-**Created with ❤️ by Muhammad Huzaifa**
+**Created with ❤️ by [Muhammad Huzaifa](https://www.muhammad-huzaifa.me/)**

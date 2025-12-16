@@ -1,6 +1,6 @@
 {
   "name": "deploy-info",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Professional deployment tracking module that extracts commit details, deployment history, author information, and build metadata directly from Git logs with zero dependencies",
   "main": "index.js",
   "scripts": {
